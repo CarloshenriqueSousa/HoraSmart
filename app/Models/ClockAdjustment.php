@@ -31,7 +31,7 @@ class ClockAdjustment extends Model
 
     public function workLog(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(WorksLog::class);
+        return $this->belongsTo(WorkLog::class);
     }
 
     public function requester(): \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -25,22 +25,22 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
         ];
     }
 
     public function employee(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(Employeer::class);
+        return $this->hasOne(Employee::class);
     }
 
-    public function IsEmployeer(): bool
+    public function isEmployee(): bool
     {
-        return $this->role === 'employeer';
+        return $this->role === 'employee';
     }
 
-    public function IsGestor(): bool
+    public function isGestor(): bool
     {
         return $this->role === 'gestor';
     }
