@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/laravel",
     "type": "project",
@@ -84,4 +85,9 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true
+=======
+    "require-dev": {
+        "laravel/sail": "^1.56"
+    }
+>>>>>>> ff82e093bcb11bf5e9f1785b41e90279e9bb5b73
 }
