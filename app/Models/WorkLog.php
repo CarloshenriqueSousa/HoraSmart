@@ -67,4 +67,4 @@ class WorkLog extends Model
     {
         return $this->status === 'complete';
     }
-}
+}   

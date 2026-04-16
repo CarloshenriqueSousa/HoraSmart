@@ -15,14 +15,14 @@ return new class extends Migration
             $table->timestamp('clock_in')->nullable();
             $table->timestamp('clock_out')->nullable();
             $table->timestamp('lunch_in')->nullable();
-            $table->timestamp('launch_out')->nullable();
-            $table->timestamp('minutes_worked')->nullable();
+            $table->timestamp('lunch_out')->nullable();
+            $table->integer('minutes_worked')->nullable();
             $table->enum('status', [
                 'in_progress',
-                'on_launch',
-                'back_from_launch',
-                'completed',
-            ]) ->default('in_progress');
+                'on_lunch',
+                'back_from_lunch',
+                'complete',
+            ])->default('in_progress');
             $table->timestamps();
 
             $table->unique(['employee_id', 'work_date']);

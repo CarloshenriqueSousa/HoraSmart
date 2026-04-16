@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employeer;
+use App\Models\Employee;
 use App\Models\User;
-use App\Models\WorksLog;
+use App\Models\WorkLog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,14 +13,23 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Gestor padrão
-        $gestor = User::create([
-            'name'     => 'Admin Smart',
-            'email'    => 'gestor@smart.com',
-            'password' => Hash::make('password'),
-            'role'     => 'gestor',
-        ]);
+        $gestor = User::firstOrCreate(
+            ['email' => 'gestor@smart.com'],
+            [
+                'name'     => 'Admin Smart',
+                'password' => Hash::make('password'),
+                'role'     => 'gestor',
+            ]
+        );
 
-        // 5 funcionários com histórico de 30 dias
+        $employees = [
+            ['name' => 'Carlos Silva',   'email' => 'carlos@smart.com'],
+            ['name' => 'Ana Souza',      'email' => 'ana@smart.com'],
+            ['name' => 'Pedro Oliveira', 'email' => 'pedro@smart.com'],
+            ['name' => 'Julia Santos',   'email' => 'julia@smart.com'],
+            ['name' => 'Marcos Lima',    'email' => 'marcos@smart.com'],
+        ];
+
         $positions = [
             'Analista de TI',
             'Técnico de Redes',
@@ -29,34 +38,29 @@ class DatabaseSeeder extends Seeder
             'Assistente Administrativo',
         ];
 
-        $employees = [
-            ['name' => 'Carlos Silva',    'email' => 'carlos@smart.com'],
-            ['name' => 'Ana Souza',       'email' => 'ana@smart.com'],
-            ['name' => 'Pedro Oliveira',  'email' => 'pedro@smart.com'],
-            ['name' => 'Julia Santos',    'email' => 'julia@smart.com'],
-            ['name' => 'Marcos Lima',     'email' => 'marcos@smart.com'],
-        ];
-
         foreach ($employees as $index => $data) {
-            $user = User::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'password' => Hash::make('password'),
-                'role'     => 'employee',
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name'     => $data['name'],
+                    'password' => Hash::make('password'),
+                    'role'     => 'employee',
+                ]
+            );
 
-            $employee = Employeer::create([
-                'user_id'  => $user->id,
-                'cpf'      => $this->fakeCpf(),
-                'address'  => 'Rua das Flores, ' . rand(100, 999) . ', Fortaleza - CE',
-                'position' => $positions[$index],
-                'hired_at' => now()->subMonths(rand(3, 24)),
-            ]);
+            $employee = Employee::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'cpf'      => $this->fakeCpf(),
+                    'address'  => 'Rua das Flores, ' . rand(100, 999) . ', Fortaleza - CE',
+                    'position' => $positions[$index],
+                    'hired_at' => now()->subMonths(rand(3, 24)),
+                ]
+            );
 
             // 30 dias de histórico (dias úteis)
             $date = now()->subDays(30);
             while ($date <= now()->subDay()) {
-                // Pula fins de semana
                 if ($date->isWeekend()) {
                     $date->addDay();
                     continue;
@@ -72,16 +76,20 @@ class DatabaseSeeder extends Seeder
                     ($clockOut->timestamp - $lunchIn->timestamp)
                 ) / 60;
 
-                WorksLog::create([
-                    'employee_id'    => $employee->id,
-                    'work_date'      => $date->toDateString(),
-                    'clock_in'       => $clockIn,
-                    'lunch_out'      => $lunchOut,
-                    'lunch_in'       => $lunchIn,
-                    'clock_out'      => $clockOut,
-                    'minutes_worked' => (int) $worked,
-                    'status'         => 'complete',
-                ]);
+                WorkLog::firstOrCreate(
+                    [
+                        'employee_id' => $employee->id,
+                        'work_date'   => $date->toDateString(),
+                    ],
+                    [
+                        'clock_in'       => $clockIn,
+                        'lunch_out'      => $lunchOut,
+                        'lunch_in'       => $lunchIn,
+                        'clock_out'      => $clockOut,
+                        'minutes_worked' => (int) $worked,
+                        'status'         => 'complete',
+                    ]
+                );
 
                 $date->addDay();
             }
