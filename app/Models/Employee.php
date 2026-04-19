@@ -33,6 +33,10 @@ class Employee extends Model
         'cpf',
         'address',
         'position',
+        'employee_type',
+        'shift',
+        'daily_workload',
+        'overtime_tolerance',
         'hired_at',
     ];
 
@@ -40,6 +44,8 @@ class Employee extends Model
     {
         return [
             'hired_at' => 'date',
+            'daily_workload' => 'integer',
+            'overtime_tolerance' => 'integer',
         ];
     }
 

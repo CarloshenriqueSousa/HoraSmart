@@ -83,10 +83,13 @@ class DashboardController extends Controller
         // Funcionários em sobrecarga (>2h extras na semana)
         $overloadedEmployees = collect();
         foreach ($weeklyHours as $employeeId => $minutes) {
-            $overtime = max(0, $minutes - (WorkLog::DAILY_WORKLOAD * 5));
-            if ($overtime > 120) {
-                $emp = $employees[$employeeId] ?? null;
-                if ($emp) {
+            $emp = $employees[$employeeId] ?? null;
+            if ($emp) {
+                // Calculation: max(0, minutes_worked - (daily_workload * 5))
+                $workload = $emp->daily_workload ?? WorkLog::DAILY_WORKLOAD;
+                $overtime = max(0, $minutes - ($workload * 5));
+                
+                if ($overtime > 120) {
                     $overloadedEmployees->push([
                         'employee'  => $emp,
                         'overtime'  => $overtime,

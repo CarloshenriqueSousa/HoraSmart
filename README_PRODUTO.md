@@ -42,3 +42,17 @@ Embora o desafio técnico propusesse um fluxo unânime (SISTEMA = EMPRESA), sabe
 Criamos uma prova de conceito com o **"Alerta de Sobrecarga"** no Painel do HR. Se o indivíduo entra em estado vermelho (`overtime > 120min/semana`), a view lista ele na seção de alertas críticos. Não punitivo, mas preventivo contra Burnouts!
 
 Esta entrega excede a avaliação técnica crua de código porque demonstra maturidade: O software deve facilitar o fluxo do RH enquanto protege a saúde e o saldo do funcionário.
+
+---
+
+## 4. Roadmap de Evolução Sustentável (Próximos Passos)
+
+Durante a fase de product discovery, identificamos que um Sistema de Ponto de alto nível deve antecipar necessidades logísticas. Por motivos de priorização (MVP) não subimos as seguintes features no escopo técnico, mas elas já estão mapeadas em nossa arquitetura de crescimento:
+
+### 4.1 Integração Logística de Transporte (Fretado / Vale)
+**O Cenário:** A empresa gasta horas vinculando funcionários a Rotas de Ônibus Fretados ou benefícios de transporte.
+**O Futuro do HoraSmart:** Como já inserimos a entidade `shift` (Turnos da Manhã, Tarde, Noite), o próximo passo é criar um módulo de Logística. O RH poderá cruzar automaticamente qual a Rota e Horário que o Fretado precisa passar para pegar os times da Tarde. Isso atrela "Saída do Expediente" diretamente ao agendamento do ônibus.
+
+### 4.2 Pausas Rígidas e Compliance Trabalhista
+**O Cenário:** Certos setores (telemarketing, operação de risco) possuem janelas congeladas e exatas de almoço.
+**O Futuro do HoraSmart:** Evoluir a máquina de estado do Ponto (`WorkLogService`) para impedir o retorno antecipado do almoço caso o funcionário não tenha completado a janela mínima estipulada pela convenção coletiva, garantindo o compliance e blindando a empresa de processos.

@@ -77,6 +77,10 @@ class EmployeeController extends Controller
                 'cpf'      => $request->cpf,
                 'address'  => $request->address,
                 'position' => $request->position,
+                'employee_type' => $request->employee_type,
+                'shift'         => $request->shift,
+                'daily_workload'=> $request->daily_workload,
+                'overtime_tolerance' => $request->overtime_tolerance,
                 'hired_at' => $request->hired_at,
             ]);
         });
@@ -100,9 +104,9 @@ class EmployeeController extends Controller
         $totalDaysWorked = (clone $completeLogs)->count();
         $avgMinutes      = $totalDaysWorked > 0 ? (int) (clone $completeLogs)->avg('minutes_worked') : 0;
 
-        // Horas extras calculadas via SQL (evita carregar todos os registros em memória)
+        // Horas extras calculadas via SQL usando a carga horária dinâmica
         $totalOvertimeRaw = (clone $completeLogs)
-            ->selectRaw('SUM(CASE WHEN minutes_worked > ? THEN minutes_worked - ? ELSE 0 END) as total_overtime', [480, 480])
+            ->selectRaw('SUM(CASE WHEN minutes_worked > ? THEN minutes_worked - ? ELSE 0 END) as total_overtime', [$employee->daily_workload, $employee->daily_workload])
             ->value('total_overtime');
         $totalOvertime = (int) $totalOvertimeRaw;
 
@@ -138,6 +142,10 @@ class EmployeeController extends Controller
                 'cpf'      => $request->cpf,
                 'address'  => $request->address,
                 'position' => $request->position,
+                'employee_type' => $request->employee_type,
+                'shift'         => $request->shift,
+                'daily_workload'=> $request->daily_workload,
+                'overtime_tolerance' => $request->overtime_tolerance,
                 'hired_at' => $request->hired_at,
             ]);
         });

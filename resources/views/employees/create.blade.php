@@ -88,6 +88,58 @@
                     @error('hired_at')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
+                <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-4 gap-5 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="sm:col-span-4">
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Configurações Base de Jornada</h4>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Tipo Contratual</label>
+                        <select name="employee_type" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition @error('employee_type') border-red-400 @enderror">
+                            <option value="CLT" {{ old('employee_type') == 'CLT' ? 'selected' : '' }}>CLT (Padrão)</option>
+                            <option value="Estagiário" {{ old('employee_type') == 'Estagiário' ? 'selected' : '' }}>Estagiário</option>
+                            <option value="Trainee" {{ old('employee_type') == 'Trainee' ? 'selected' : '' }}>Trainee</option>
+                        </select>
+                        @error('employee_type')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Turno</label>
+                        <select name="shift" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition @error('shift') border-red-400 @enderror">
+                            <option value="morning" {{ old('shift') == 'morning' ? 'selected' : '' }}>Manhã</option>
+                            <option value="afternoon" {{ old('shift') == 'afternoon' ? 'selected' : '' }}>Tarde</option>
+                            <option value="night" {{ old('shift') == 'night' ? 'selected' : '' }}>Noite</option>
+                        </select>
+                        @error('shift')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Horas P/ Dia</label>
+                        <div class="relative">
+                            <input type="number" name="daily_workload" value="{{ old('daily_workload', 480) }}" min="60" max="480"
+                                   class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition @error('daily_workload') border-red-400 @enderror">
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                <span class="text-gray-400 text-xs">min</span>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">Ex: 8h = 480 min</p>
+                        @error('daily_workload')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Tolerância (Atraso)</label>
+                        <div class="relative">
+                            <input type="number" name="overtime_tolerance" value="{{ old('overtime_tolerance', 10) }}" min="0" max="10"
+                                   class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition @error('overtime_tolerance') border-red-400 @enderror">
+                            <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                <span class="text-gray-400 text-xs">min</span>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">Máximo legal: 10m</p>
+                        @error('overtime_tolerance')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
                     <div class="relative">

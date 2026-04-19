@@ -134,7 +134,12 @@ class WorkLog extends Model
             return 0;
         }
 
-        return max(0, $this->minutes_worked - self::DAILY_WORKLOAD);
+        $workload = $this->employee->daily_workload ?? self::DAILY_WORKLOAD;
+        $tolerance = $this->employee->overtime_tolerance ?? 10;
+        
+        $diff = $this->minutes_worked - $workload;
+
+        return ($diff > $tolerance) ? $diff : 0;
     }
 
     /**
