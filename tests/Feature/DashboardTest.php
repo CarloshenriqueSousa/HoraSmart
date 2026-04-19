@@ -38,7 +38,7 @@ class DashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('dashboard.employee');
-        $response->assertSee('Meu Ponto');
+        $response->assertSee('Horário Atual');
     }
 
     public function test_guest_is_redirected_to_login()

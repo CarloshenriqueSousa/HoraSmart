@@ -35,7 +35,7 @@ class WorkLogService
 {
     public function punch(Employee $employee): array
     {
-        $today = today()->toDateString();
+        $today = today()->startOfDay();
 
         // DB::transaction garante atomicidade — evita race condition com cliques simultâneos
         $log = DB::transaction(function () use ($employee, $today) {
@@ -86,10 +86,10 @@ class WorkLogService
 
     private function calculateMinutes(WorkLog $log): int
     {
-        $morning   = $log->lunch_out->diffInMinutes($log->clock_in);
-        $afternoon = $log->clock_out->diffInMinutes($log->lunch_in);
+        $morning   = abs($log->lunch_out->diffInMinutes($log->clock_in, false));
+        $afternoon = abs($log->clock_out->diffInMinutes($log->lunch_in, false));
 
-        return $morning + $afternoon;
+        return (int) ($morning + $afternoon);
     }
 
     private function actionLabel(string $action): string
