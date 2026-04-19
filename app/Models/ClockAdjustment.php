@@ -1,5 +1,28 @@
 <?php
 
+/**
+ * Model: ClockAdjustment — Solicitação de ajuste de ponto.
+ *
+ * Quando um funcionário esquece de bater o ponto ou registra no horário errado,
+ * pode solicitar uma correção ao gestor de RH. Este model representa essa solicitação.
+ *
+ * Fluxo de aprovação:
+ *   1. Funcionário cria o ajuste (status = 'pending')
+ *   2. Gestor revisa e aprova ou rejeita
+ *   3. Se aprovado, o horário do WorkLog é atualizado automaticamente
+ *
+ * Relacionamentos:
+ *  - belongsTo WorkLog → Registro de ponto que será ajustado
+ *  - belongsTo User (requester) → Quem solicitou o ajuste
+ *  - belongsTo User (reviewer)  → Quem revisou (null se pendente)
+ *
+ * Tecnologias: Laravel Eloquent, Carbon (casts), DB Transaction (na aprovação)
+ *
+ * @see \App\Http\Controllers\ClockAdjustmentController
+ * @see \App\Policies\ClockAdjustmentPolicy
+ * @see \App\Http\Requests\StoreClockAdjustmentRequest
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

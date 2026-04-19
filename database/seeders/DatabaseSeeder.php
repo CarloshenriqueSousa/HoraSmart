@@ -1,5 +1,28 @@
 <?php
 
+/**
+ * Seeder: DatabaseSeeder — Dados de demonstração do HoraSmart.
+ *
+ * Cria um ambiente completo para avaliação:
+ *  - 1 usuário gestor (gestor@smart.com / password)
+ *  - 5 funcionários com dados realistas (nome, CPF válido, cargo, endereço em Fortaleza)
+ *  - 30 dias de histórico de ponto para cada funcionário (apenas dias úteis)
+ *
+ * Cada dia útil recebe 4 batidas com horários randomizados:
+ *  - Entrada: entre 07:00 e 09:59
+ *  - Almoço: ~4h depois da entrada, duração de 45-75 min
+ *  - Saída: ~4h depois do retorno do almoço
+ *
+ * O CPF é gerado com dígitos verificadores válidos (algoritmo real do CPF).
+ * Usa firstOrCreate para idempotência — pode rodar múltiplas vezes sem erro.
+ *
+ * Tecnologias: Laravel Seeder, Eloquent, Carbon, firstOrCreate
+ *
+ * @see \App\Models\User
+ * @see \App\Models\Employee
+ * @see \App\Models\WorkLog
+ */
+
 namespace Database\Seeders;
 
 use App\Models\Employee;
@@ -58,7 +81,7 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            // 30 dias de histórico (dias úteis)
+            // 30 dias de histórico (apenas dias úteis)
             $date = now()->subDays(30);
             while ($date <= now()->subDay()) {
                 if ($date->isWeekend()) {
@@ -96,6 +119,9 @@ class DatabaseSeeder extends Seeder
         }
     }
 
+    /**
+     * Gera um CPF válido com dígitos verificadores corretos.
+     */
     private function fakeCpf(): string
     {
         $n  = array_map(fn() => rand(0, 9), range(1, 9));

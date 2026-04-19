@@ -1,3 +1,148 @@
+/*
+ * Styles: app.css — Design system principal do HoraSmart.
+ *
+ * Utiliza Tailwind CSS 3 como base, com customizações:
+ *  - Importa Google Font "Inter" para tipografia premium
+ *  - Animações customizadas (fadeIn, slideUp, scaleIn, pulse, shimmer)
+ *  - Utilities para glassmorphism e scrollbar customizada
+ *  - Estilos para impressão (relatórios)
+ *  - Progress ring CSS para indicadores circulares
+ *
+ * Tecnologias: Tailwind CSS 3, Google Fonts, CSS Animations, CSS Custom Properties
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* Scrollbar sutil */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #c7d2fe;
+        border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #a5b4fc;
+    }
+}
+
+@layer components {
+    /* Glassmorphism */
+    .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .glass-dark {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Progress Ring CSS */
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    .progress-ring__circle {
+        transition: stroke-dashoffset 1s ease-out;
+    }
+
+    /* Gradient text utility */
+    .text-gradient {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Shimmer loading effect */
+    .shimmer-bg {
+        background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%);
+        background-size: 200% 100%;
+    }
+
+    /* Card hover premium */
+    .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Stagger animation children */
+    .stagger-children > * {
+        animation: slideUp 0.5s ease-out both;
+    }
+    .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+    .stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+    .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+    .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+    .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+}
+
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.3s ease-out;
+    }
+
+    .animate-pulse-soft {
+        animation: pulseSoft 2s ease-in-out infinite;
+    }
+
+    /* Shake animation for errors */
+    .animate-shake {
+        animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        75% { transform: translateX(6px); }
+    }
+}
+
+/* Print styles para relatórios */
+@media print {
+    nav, footer, button, .no-print, form {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+        font-size: 12px;
+    }
+    .print-break {
+        page-break-before: always;
+    }
+    table {
+        font-size: 10px;
+    }
+    th, td {
+        padding: 4px 8px !important;
+    }
+}

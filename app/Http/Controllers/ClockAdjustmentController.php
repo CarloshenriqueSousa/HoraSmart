@@ -1,5 +1,31 @@
 <?php
 
+/**
+ * Controller: ClockAdjustmentController — Solicitações de ajuste de ponto.
+ *
+ * Funcionalidades:
+ *  - index():  Lista ajustes — gestor vê todos, funcionário vê apenas os seus
+ *  - create(): Formulário de solicitação (pré-carrega dados do WorkLog)
+ *  - store():  Cria solicitação com status 'pending'
+ *  - review(): Gestor aprova ou rejeita — se aprovado, atualiza o WorkLog automaticamente
+ *
+ * Fluxo de aprovação (review):
+ *  1. Gestor escolhe 'approved' ou 'rejected'
+ *  2. Se aprovado, o campo indicado (clock_in, lunch_out, etc.) é atualizado no WorkLog
+ *  3. Tudo dentro de DB::transaction para consistência
+ *
+ * Segurança:
+ *  - Funcionário só pode criar ajuste para seus próprios registros (authorize + policy)
+ *  - Apenas gestor pode revisar (middleware 'role:gestor' na rota)
+ *
+ * Tecnologias: Laravel Controller, DB Transaction, Policies, Form Requests, Alpine.js (modal)
+ *
+ * @see \App\Http\Requests\StoreClockAdjustmentRequest
+ * @see \App\Http\Requests\ReviewClockAdjustmentRequest
+ * @see \App\Policies\ClockAdjustmentPolicy
+ * @see resources/views/adjustments/index.blade.php (modal de revisão com Alpine.js)
+ */
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ReviewClockAdjustmentRequest;
@@ -70,10 +96,23 @@ class ClockAdjustmentController extends Controller
             ]);
 
             if ($request->status === 'approved') {
-                $field = $adjustment->field;
-                $adjustment->workLog->update([
-                    $field => $adjustment->requested_time,
-                ]);
+                $field   = $adjustment->field;
+                $workLog = $adjustment->workLog;
+
+                $workLog->update([$field => $adjustment->requested_time]);
+
+                // Recarregar para pegar os valores atualizados
+                $workLog->refresh();
+
+                // Recalcular horas se a jornada estiver completa
+                if ($workLog->clock_in && $workLog->lunch_out && $workLog->lunch_in && $workLog->clock_out) {
+                    $morning   = $workLog->lunch_out->diffInMinutes($workLog->clock_in);
+                    $afternoon = $workLog->clock_out->diffInMinutes($workLog->lunch_in);
+                    $workLog->update([
+                        'minutes_worked' => max(0, $morning + $afternoon),
+                        'status'         => 'complete',
+                    ]);
+                }
             }
         });
 

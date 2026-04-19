@@ -1,5 +1,23 @@
 <?php
 
+/**
+ * Form Request: Validação para cadastro de funcionário (via gestor).
+ *
+ * Garante que:
+ *  - Apenas gestores podem executar (authorize)
+ *  - Nome, email, CPF, endereço, cargo, data de admissão e senha são obrigatórios
+ *  - Email único na tabela users, CPF único na tabela employees
+ *  - CPF deve ter exatamente 14 caracteres (formato 000.000.000-00)
+ *  - Data de admissão não pode ser futura
+ *  - Senha confirmada (password_confirmation) com mínimo 8 caracteres
+ *
+ * Mensagens de erro em português (pt-BR) para UX.
+ *
+ * Tecnologias: Laravel Form Request, Validation Rules
+ *
+ * @see \App\Http\Controllers\EmployeeController::store()
+ */
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;

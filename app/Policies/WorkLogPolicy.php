@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * Policy: WorkLogPolicy — Autorização para operações com registros de ponto.
+ *
+ * Regras:
+ *  - viewAny: Todos os usuários autenticados podem listar (filtrado no controller)
+ *  - view: Gestores veem qualquer registro; funcionário vê apenas os seus
+ *  - punch: Apenas o próprio funcionário pode registrar ponto no seu WorkLog
+ *
+ * Tecnologias: Laravel Policy
+ *
+ * @see \App\Http\Controllers\WorkLogController
+ */
+
 namespace App\Policies;
 
 use App\Models\User;

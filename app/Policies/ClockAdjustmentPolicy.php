@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * Policy: ClockAdjustmentPolicy — Autorização para ajustes de ponto.
+ *
+ * Regras:
+ *  - viewAny: Todos veem (filtrado no controller por role)
+ *  - view: Gestores veem qualquer ajuste; funcionário vê apenas os seus
+ *  - create: Apenas funcionários podem criar solicitações
+ *  - review: Apenas gestores podem aprovar/rejeitar
+ *
+ * Tecnologias: Laravel Policy
+ *
+ * @see \App\Http\Controllers\ClockAdjustmentController
+ */
+
 namespace App\Policies;
 
 use App\Models\ClockAdjustment;

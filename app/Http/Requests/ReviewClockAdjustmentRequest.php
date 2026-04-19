@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * Form Request: Validação para revisão de solicitação de ajuste (via gestor).
+ *
+ * O gestor deve informar:
+ *  - status: 'approved' ou 'rejected'
+ *  - reviewer_comment: opcional, até 500 caracteres
+ *
+ * Se aprovado, o ClockAdjustmentController atualiza o WorkLog automaticamente.
+ *
+ * Tecnologias: Laravel Form Request
+ *
+ * @see \App\Http\Controllers\ClockAdjustmentController::review()
+ */
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;

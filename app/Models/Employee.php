@@ -1,5 +1,24 @@
 <?php
 
+/**
+ * Model: Employee — Dados cadastrais de um funcionário.
+ *
+ * Separado do User por design: User cuida apenas de autenticação (email/senha/role),
+ * enquanto Employee armazena dados de RH (CPF, endereço, cargo, data de admissão).
+ * Isso permite que o sistema de autenticação permaneça limpo e desacoplado.
+ *
+ * Relacionamentos:
+ *  - belongsTo User     → Cada funcionário tem exatamente um usuário
+ *  - hasMany  WorkLog   → Registros de ponto do funcionário
+ *  - hasOne   todayLog  → Atalho para o registro de ponto do dia atual
+ *
+ * Tecnologias: Laravel Eloquent, Carbon (cast de 'hired_at' para date)
+ *
+ * @see \App\Models\User
+ * @see \App\Models\WorkLog
+ * @see \App\Http\Controllers\EmployeeController
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

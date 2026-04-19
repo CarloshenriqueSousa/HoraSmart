@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * Form Request: Validação para atualização de funcionário (via gestor).
+ *
+ * Similar ao StoreEmployeeRequest, mas:
+ *  - Não exige senha (na edição, senha não é alterada)
+ *  - Regras de unique ignoram o registro atual (email do user, cpf do employee)
+ *
+ * Tecnologias: Laravel Form Request, Validation Rules
+ *
+ * @see \App\Http\Controllers\EmployeeController::update()
+ */
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;

@@ -1,5 +1,20 @@
 <?php
 
+/**
+ * Policy: EmployeePolicy — Autorização para operações com funcionários.
+ *
+ * Determina o que cada tipo de usuário pode fazer com Employee:
+ *  - viewAny/create/update/delete: Apenas gestores
+ *  - view: Gestores veem qualquer um; funcionário vê apenas seu próprio perfil
+ *
+ * Complementa o middleware 'role:gestor' nas rotas — dupla camada de segurança.
+ * Usado nos controllers via $this->authorize('método', Employee::class).
+ *
+ * Tecnologias: Laravel Policy, Autorização baseada em modelo
+ *
+ * @see \App\Http\Controllers\EmployeeController
+ */
+
 namespace App\Policies;
 
 use App\Models\Employee;

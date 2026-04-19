@@ -1,59 +1,87 @@
-
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ⏱️ HoraSmart — Sistema de RH e Controle de Jornada
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 3">
+  <img src="https://img.shields.io/badge/Alpine.js-3-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white" alt="Alpine.js 3">
+  <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as this:
+## 🎯 Visão do Produto (Product Perspective)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+O **HoraSmart** é um sistema web responsivo para gestão de funcionários e controle de jornada de trabalho. Seu objetivo é simplificar a vida do departamento de RH e dos colaboradores através de uma interface premium, dinâmica e focada na experiência do usuário.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Principais Funcionalidades
+- **Ponto Digital Inteligente**: Registro com 4 batidas diárias via AJAX (sem recarregamento da página). O design conta com a animação "pulse" focada na ação principal.
+- **Controle de Horas Extras**: Cálculo automático das horas trabalhadas, incluindo banco de horas mensal e diário.
+- **Relatórios Avançados**: Exportação de dados consolidados em *CSV* e relatórios mensais em *PDF*. Os exportadores foram refinados para ordenar resultados primeiramente por nome do funcionário e data.
+- **Solicitação de Ajustes**: Fluxo de aprovação integrado. O funcionário solicita correções na batida e o gestor revisa visualizando o impacto "antes e depois" através de um modal assíncrono projetado detalhadamente.
+- **Dashboard de Gestão**: Alertas de sobrecarga (funcionários com muitas horas extras neste mês/semana) e acompanhamento em tempo real das presenças.
+- **Design Premium e Mobile-First**: Interface *glassmorphism*, micro-animações, feedback visual estelar, design responsivo fluido com tabelas scrolláveis e **PWA** configurado para instalar em desktops e smartphones.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 💻 Visão Técnica (Technical Perspective)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Stack e Bibliotecas
+- **Backend:** Laravel 13, PHP 8.3+, `barryvdh/laravel-dompdf` para renderização de PDF.
+- **Frontend:** Blade, Tailwind CSS 3 (gerenciado pelo Vite), blocos semânticos e CSS vainilla em `app.css` para *custom properties*, Alpine.js 3 para estado efêmero e transições.
+- **Banco de Dados:** SQLite no ambiente de desenvolvimento, plenamente migrável por ORM.
+- **Design Pattern:** *Service Pattern*. Todas as lógicas complexas e de máquina de estado do ponto batido residem no `WorkLogService`.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Decisões de Arquitetura e Modelagem
+- **Múltiplos Níveis de Usuário e RBAC**: Proteção imposta pelo `EnsureUserRole` middleware implementado, em adição às Gate/Policies providas nativamente pelo Laravel (`EmployeePolicy`, `WorkLogPolicy`).
+- **Autonomia da Tabela Employee:** `Employee` contém especificações RH. A separação do `User` isola os dados de login mantendo as abstrações intactas.
+- **Horário Transposto em Minutos:** As horas trabalhadas e extras são persistidas e trafegadas como inteiros. Para as *views*, Accessors encapsulam os dados via formato embutido "HH:MM" (ex. `getOvertimeMinutesAttribute` / `getFormattedOvertimeAttribute`).
+- **Componentização com Alpine.js**: Extensa utilização do Alpine em componentes onde componentes Livewire seriam "pesados" demais, comumente em Filtros, Modais de Edição e dropdowns de navegação interativa.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## 🚀 Como Executar (Process Perspective)
+
+### 1. Requisitos Computacionais
+- PHP 8.3+
+- Node.js (v18 recomendável)
+- SQLite3 ativado ou Servidor SQL em rodagem
+- Composer (2.0+)
+
+### 2. Passo a Passo
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clonar o repositório
+git clone <url-do-repositorio>
+cd HoraSmart
 
-php artisan boost:install
+# 2. Instalar dependências PHP
+composer install
+
+# 3. Configurar ambiente
+cp .env.example .env
+php artisan key:generate
+
+# 4. Criar dados de teste elaborados (gestor, 5 funcionários, e 30 dias de batida randomizada com lógica robusta via Factory/Seeder)
+php artisan migrate:fresh --seed
+
+# 5. Compilar assets (Tailwind e JS) e registrar publicamente os SW (Service Workers para o PWA)
+npm install
+npm run build
+
+# 6. Iniciar o servidor
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices
+Acesse a página: **http://(IP_ADDRESS ou localhost:8000)**
 
-## Contributing
+### 🔑 Credenciais (Via DatabaseSeeder)
+Os seeders injetam perfis prontos para você debugar todas as features de ponta-a-ponta:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Perfil | E-mail | Senha |
+|--------|--------|-------|
+| **Gestor de RH** | `gestor@smart.com` | `password` |
+| **Funcionário Demo 1** | `carlos@smart.com` | `password` |
+| **Funcionário Demo 2** | `ana@smart.com` | `password` |
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+> *Dica: Teste primeiro visualizar os Relatórios CSV/PDF logando como gestor, depare-se com as correções já integradas, para em seguida logar-se como "carlos@smart.com" e efetuar o disparo do AJAX ponto-eletrônico em tempo-real!* 
