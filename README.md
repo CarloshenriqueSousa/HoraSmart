@@ -85,3 +85,23 @@ Os seeders injetam perfis prontos para você debugar todas as features de ponta-
 | **Funcionário Demo 2** | `ana@smart.com` | `password` |
 
 > *Dica: Teste primeiro visualizar os Relatórios CSV/PDF logando como gestor, depare-se com as correções já integradas, para em seguida logar-se como "carlos@smart.com" e efetuar o disparo do AJAX ponto-eletrônico em tempo-real!* 
+
+---
+
+## 📜 Histórico de Commits
+
+Abaixo encontra-se o registro cronológico das últimas submissões efetuadas no repositório de desenvolvimento, evidenciando a evolução contínua da aplicação:
+
+* **melhoras nas features de perfil** - *agora mesmo*
+* **README técnico** - *3 horas atrás*
+* **retirada de logs arquivados com os erros** - *3 horas atrás*
+* **Correção de Bugs do front-end e finalização das views** - *3 horas atrás*
+* **finalização das views Employees e do app.blade.php** - *3 dias atrás*
+* **merg de brachs** - *4 dias atrás*
+* **correção de bugs** - *4 dias atrás*
+* **Correção de merge nas branchs** - *5 dias atrás*
+* **remodelagem dos models** - *5 dias atrás*
+* **remodel do projeto e exclusão de arquivos** - *6 dias atrás*
+* **montagem dos Models e mudanças nas pastas do projeto** - *6 dias atrás*
+* **Criação do ambiente + criação das tabelas do bd** - *10 dias atrás*
+* **Initial commit** - *13 dias atrás*
