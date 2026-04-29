@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13">
-  <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PHP-8.4+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 3">
   <img src="https://img.shields.io/badge/Alpine.js-3-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white" alt="Alpine.js 3">
   <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">
@@ -27,10 +27,11 @@ O **HoraSmart** é um sistema web responsivo para gestão de funcionários e con
 ## 💻 Visão Técnica (Technical Perspective)
 
 ### Stack e Bibliotecas
-- **Backend:** Laravel 13, PHP 8.3+, `barryvdh/laravel-dompdf` para renderização de PDF.
+- **Backend:** Laravel 13, PHP 8.4+, `barryvdh/laravel-dompdf` para renderização de PDF.
 - **Frontend:** Blade, Tailwind CSS 3 (gerenciado pelo Vite), blocos semânticos e CSS vainilla em `app.css` para *custom properties*, Alpine.js 3 para estado efêmero e transições.
 - **Banco de Dados:** SQLite no ambiente de desenvolvimento, plenamente migrável por ORM.
 - **Design Pattern:** *Service Pattern*. Todas as lógicas complexas e de máquina de estado do ponto batido residem no `WorkLogService`.
+- **Stack consolidada do produto:** veja `requirements.txt` (`[stack_snapshot]`) com backend, frontend, modelagem e decisões técnicas fechadas.
 
 ### Decisões de Arquitetura e Modelagem
 - **Múltiplos Níveis de Usuário e RBAC**: Proteção imposta pelo `EnsureUserRole` middleware implementado, em adição às Gate/Policies providas nativamente pelo Laravel (`EmployeePolicy`, `WorkLogPolicy`).
@@ -43,10 +44,12 @@ O **HoraSmart** é um sistema web responsivo para gestão de funcionários e con
 ## 🚀 Como Executar (Process Perspective)
 
 ### 1. Requisitos Computacionais
-- PHP 8.3+
+- PHP 8.4+ (execucao local)
 - Node.js (v18 recomendável)
 - SQLite3 ativado ou Servidor SQL em rodagem
 - Composer (2.0+)
+- Docker + Docker Compose plugin (recomendado para executar com Laravel Sail)
+- Consulte `requirements.txt` para ver a lista consolidada de tecnologias e dependências do projeto.
 
 ### 2. Passo a Passo
 
@@ -55,25 +58,58 @@ O **HoraSmart** é um sistema web responsivo para gestão de funcionários e con
 git clone <url-do-repositorio>
 cd HoraSmart
 
-# 2. Instalar dependências PHP
+# 2. Conferir stack e dependências do projeto
+cat requirements.txt
+
+# 3. Instalar dependências PHP
 composer install
 
-# 3. Configurar ambiente
+# 4. Configurar ambiente
 cp .env.example .env
 php artisan key:generate
 
-# 4. Criar dados de teste elaborados (gestor, 5 funcionários, e 30 dias de batida randomizada com lógica robusta via Factory/Seeder)
+# 5. Criar dados de teste elaborados (gestor, 5 funcionários, e 30 dias de batida randomizada com lógica robusta via Factory/Seeder)
 php artisan migrate:fresh --seed
 
-# 5. Compilar assets (Tailwind e JS) e registrar publicamente os SW (Service Workers para o PWA)
+# 6. Compilar assets (Tailwind e JS) e registrar publicamente os SW (Service Workers para o PWA)
 npm install
 npm run build
 
-# 6. Iniciar o servidor
+# 7. Iniciar o servidor
 php artisan serve
 ```
 
 Acesse a página: **http://(IP_ADDRESS ou localhost:8000)**
+
+### 3. Execução Recomendada com Laravel Sail (Docker)
+
+> Use este fluxo se seu PHP local for menor que 8.4.
+
+```bash
+# 1. Subir containers (app + postgres + mailpit)
+./vendor/bin/sail up -d
+
+# 2. Instalar dependências PHP dentro do container
+./vendor/bin/sail composer install
+
+# 3. Configurar ambiente (se necessário)
+cp .env.example .env
+./vendor/bin/sail artisan key:generate
+
+# 4. Rodar migrations + seeders
+./vendor/bin/sail artisan migrate:fresh --seed
+
+# 5. Compilar frontend
+npm install
+npm run build
+```
+
+Acesse via porta configurada no `.env` (`APP_PORT`, padrão `80`): **http://localhost**
+
+### 4. Troubleshooting Rápido
+
+- Erro `Your Composer dependencies require a PHP version ">= 8.4.0"`: seu projeto está travado em dependências que exigem PHP 8.4. Execute com Sail ou atualize o PHP local para 8.4+.
+- Se o `composer install` falhar no host, não continue com `php artisan ...` fora do container; use `./vendor/bin/sail artisan ...`.
 
 ### 🔑 Credenciais (Via DatabaseSeeder)
 Os seeders injetam perfis prontos para você debugar todas as features de ponta-a-ponta:

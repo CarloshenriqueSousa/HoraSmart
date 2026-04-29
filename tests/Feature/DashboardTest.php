@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,7 +14,7 @@ class DashboardTest extends TestCase
 
     public function test_gestor_sees_manager_dashboard()
     {
-        $gestor = User::factory()->create(['role' => 'gestor']);
+        $gestor = User::factory()->create(['role' => UserRole::Gestor]);
 
         $response = $this->actingAs($gestor)->get(route('dashboard'));
 
@@ -23,15 +25,14 @@ class DashboardTest extends TestCase
 
     public function test_employee_sees_employee_dashboard()
     {
-        $employee = User::factory()->create(['role' => 'employee']);
-        
-        // Crio na mão um Employee ligado pois a interface pode precisar
-        \App\Models\Employee::create([
-            'user_id' => $employee->id,
-            'cpf' => '99999999999',
+        $employee = User::factory()->create(['role' => UserRole::Employee]);
+
+        Employee::create([
+            'user_id'  => $employee->id,
+            'cpf'      => '999.999.999-99',
             'position' => 'Dev',
-            'address' => 'Test Address',
-            'hired_at' => now()->toDateString()
+            'address'  => 'Test Address',
+            'hired_at' => now()->toDateString(),
         ]);
 
         $response = $this->actingAs($employee)->get(route('dashboard'));

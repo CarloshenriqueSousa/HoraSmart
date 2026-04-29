@@ -3,31 +3,18 @@
 /**
  * Controller: DashboardController — Painel principal do sistema.
  *
- * Redireciona automaticamente para o dashboard correto baseado no role do usuário:
- *  - Gestor:      Dashboard com KPIs (total funcionários, presentes hoje, no almoço, finalizados)
- *                 + tabela de presença do dia + horas semanais por funcionário
- *                 + ajustes pendentes + alerta de sobrecarga
- *  - Funcionário: Dashboard pessoal com horas do dia/semana/mês + widget de ponto via AJAX
- *                 + banco de horas + horas extras + progress ring
+ * Redireciona para o dashboard correto baseado no role do usuário:
+ *  - Gestor:      Dashboard com KPIs + tabela de presença + horas semanais + alerts
+ *  - Funcionário: Dashboard pessoal com horas do dia/semana/mês + widget de ponto
  *
- * Dados calculados:
- *  - weeklyHours: horas trabalhadas na semana por funcionário (para gráfico de barras)
- *  - monthMinutes/weekMinutes: acumulados para o funcionário logado
- *  - overtimeWeek: horas extras na semana
- *  - pendingAdjustments: contagem de ajustes pendentes (gestor)
- *  - overloadedEmployees: funcionários com muitas horas extras (gestor)
- *
- * Tecnologias: Laravel Controller, Eloquent (with, whereBetween, groupBy), Carbon
- *
- * @see \App\Models\WorkLog
- * @see \App\Models\Employee
- * @see \App\Models\ClockAdjustment
+ * @see \App\Enums\WorkLogStatus
  * @see resources/views/dashboard/gestor.blade.php
  * @see resources/views/dashboard/employee.blade.php
  */
 
 namespace App\Http\Controllers;
 
+use App\Enums\WorkLogStatus;
 use App\Models\ClockAdjustment;
 use App\Models\Employee;
 use App\Models\WorkLog;
@@ -55,11 +42,14 @@ class DashboardController extends Controller
             ->get();
 
         $presentToday = $todayLogs->whereIn('status', [
-            'in_progress', 'on_lunch', 'back_from_lunch', 'complete'
+            WorkLogStatus::InProgress,
+            WorkLogStatus::OnLunch,
+            WorkLogStatus::BackFromLunch,
+            WorkLogStatus::Complete,
         ])->count();
 
-        $onLunch  = $todayLogs->where('status', 'on_lunch')->count();
-        $finished = $todayLogs->where('status', 'complete')->count();
+        $onLunch  = $todayLogs->where('status', WorkLogStatus::OnLunch)->count();
+        $finished = $todayLogs->where('status', WorkLogStatus::Complete)->count();
 
         // Mapa employee_id => log de hoje (para lookup rápido na view)
         $todayLogsByEmployee = $todayLogs->keyBy('employee_id');
@@ -67,13 +57,15 @@ class DashboardController extends Controller
         // Todos os funcionários (para mostrar ausentes também)
         $allEmployees = Employee::with('user')->orderBy('created_at')->get();
 
-        // Horas trabalhadas na semana por funcionário
-        $weeklyHours = WorkLog::with('employee.user')
-            ->whereBetween('work_date', [now()->startOfWeek(), now()->endOfWeek()])
-            ->where('status', 'complete')
-            ->get()
+        // Horas trabalhadas na semana por funcionário (agregação SQL — sem carregar tudo em RAM)
+        $weekStart = now()->copy()->startOfWeek();
+        $weekEnd   = now()->copy()->endOfWeek();
+
+        $weeklyHours = WorkLog::selectRaw('employee_id, SUM(minutes_worked) as total')
+            ->whereBetween('work_date', [$weekStart, $weekEnd])
+            ->where('status', WorkLogStatus::Complete)
             ->groupBy('employee_id')
-            ->map(fn($logs) => $logs->sum('minutes_worked'));
+            ->pluck('total', 'employee_id');
 
         $employees = $allEmployees->keyBy('id');
 
@@ -85,10 +77,9 @@ class DashboardController extends Controller
         foreach ($weeklyHours as $employeeId => $minutes) {
             $emp = $employees[$employeeId] ?? null;
             if ($emp) {
-                // Calculation: max(0, minutes_worked - (daily_workload * 5))
-                $workload = $emp->daily_workload ?? WorkLog::DAILY_WORKLOAD;
+                $workload = $emp->daily_workload ?? 480;
                 $overtime = max(0, $minutes - ($workload * 5));
-                
+
                 if ($overtime > 120) {
                     $overloadedEmployees->push([
                         'employee'  => $emp,
@@ -138,33 +129,27 @@ class DashboardController extends Controller
             ->limit(7)
             ->get();
 
-        $monthMinutes = $employee->workLogs()
-            ->whereMonth('work_date', now()->month)
-            ->whereYear('work_date', now()->year)
-            ->where('status', 'complete')
-            ->sum('minutes_worked');
+        // Dados da semana — query única
+        $weekStart = now()->copy()->startOfWeek();
+        $weekEnd   = now()->copy()->endOfWeek();
 
-        $weekMinutes = $employee->workLogs()
-            ->whereBetween('work_date', [now()->startOfWeek(), now()->endOfWeek()])
-            ->where('status', 'complete')
-            ->sum('minutes_worked');
-
-        // Horas extras na semana
         $weekLogs = $employee->workLogs()
-            ->whereBetween('work_date', [now()->startOfWeek(), now()->endOfWeek()])
-            ->where('status', 'complete')
+            ->whereBetween('work_date', [$weekStart, $weekEnd])
+            ->where('status', WorkLogStatus::Complete)
             ->get();
+
+        $weekMinutes  = $weekLogs->sum('minutes_worked');
         $overtimeWeek = $weekLogs->sum(fn($log) => $log->overtime_minutes);
 
-        // Horas extras no mês
+        // Dados do mês — query única
         $monthLogs = $employee->workLogs()
             ->whereMonth('work_date', now()->month)
             ->whereYear('work_date', now()->year)
-            ->where('status', 'complete')
+            ->where('status', WorkLogStatus::Complete)
             ->get();
-        $overtimeMonth = $monthLogs->sum(fn($log) => $log->overtime_minutes);
 
-        // Dias trabalhados no mês
+        $monthMinutes     = $monthLogs->sum('minutes_worked');
+        $overtimeMonth    = $monthLogs->sum(fn($log) => $log->overtime_minutes);
         $workingDaysMonth = $monthLogs->count();
 
         return view('dashboard.employee', compact(

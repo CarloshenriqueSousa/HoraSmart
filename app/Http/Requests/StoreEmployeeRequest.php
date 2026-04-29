@@ -7,19 +7,17 @@
  *  - Apenas gestores podem executar (authorize)
  *  - Nome, email, CPF, endereço, cargo, data de admissão e senha são obrigatórios
  *  - Email único na tabela users, CPF único na tabela employees
- *  - CPF deve ter exatamente 14 caracteres (formato 000.000.000-00)
+ *  - CPF deve ter exatamente 14 caracteres (formato 000.000.000-00) e dígitos válidos
  *  - Data de admissão não pode ser futura
  *  - Senha confirmada (password_confirmation) com mínimo 8 caracteres
  *
- * Mensagens de erro em português (pt-BR) para UX.
- *
- * Tecnologias: Laravel Form Request, Validation Rules
- *
  * @see \App\Http\Controllers\EmployeeController::store()
+ * @see \App\Rules\ValidCpf
  */
 
 namespace App\Http\Requests;
 
+use App\Rules\ValidCpf;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEmployeeRequest extends FormRequest
@@ -41,7 +39,8 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users,email'],
-            'cpf'      => ['required', 'string', 'size:14', 'unique:employees,cpf'],
+            'cpf'      => ['required', 'string', 'size:14', new ValidCpf, 'unique:employees,cpf'],
+
             'address'  => ['required', 'string', 'max:500'],
             'position' => ['required', 'string', 'max:100'],
             'employee_type' => ['required', 'string', 'in:Estagiário,Trainee,CLT'],

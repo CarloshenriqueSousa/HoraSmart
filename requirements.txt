@@ -1,0 +1,50 @@
+# HoraSmart - Requisitos e Dependencias
+#
+# Arquivo de referencia para setup local (estilo requirements.txt).
+# Este projeto NAO e Python; aqui listamos tecnologias do ecossistema PHP + Node.
+
+[runtime]
+# Opcao 1 (local): use PHP/Composer instalados na maquina
+php>=8.4
+composer>=2.0
+node>=18
+npm>=9
+sqlite3>=3
+postgresql>=14
+
+# Opcao 2 (recomendada): usar Laravel Sail
+docker>=24
+docker-compose-plugin>=2
+
+[stack_snapshot]
+backend=Laravel 12/13, PHP 8.4, Laravel Breeze, Queues + Scheduler, DomPDF, spatie/laravel-activitylog
+frontend=Blade, Alpine.js, Tailwind CSS, Axios, DataTables, Chart.js, PWA (manifest + service worker)
+modelagem_principal=users, employees, work_logs, clock_adjustments, notifications
+decisoes_tecnicas=status enum em work_logs, minutes_worked integer, relacionamento Employee 1:1 User, Laravel Policies, WorkLogService, seeders demo
+
+[php_packages]
+laravel/framework:^13.0
+barryvdh/laravel-dompdf:^3.1
+laravel/tinker:^3.0
+
+[php_dev_packages]
+fakerphp/faker:^1.23
+laravel/breeze:^2.4
+laravel/pail:^1.2.5
+laravel/pint:^1.27
+laravel/sail:^1.56
+mockery/mockery:^1.6
+nunomaduro/collision:^8.6
+phpunit/phpunit:^12.5.12
+
+[frontend_dev_packages]
+vite:^8.0.0
+tailwindcss:^3.1.0
+@tailwindcss/forms:^0.5.2
+@tailwindcss/vite:^4.0.0
+alpinejs:^3.4.2
+axios:>=1.11.0 <=1.14.0
+autoprefixer:^10.4.2
+concurrently:^9.0.1
+laravel-vite-plugin:^3.0.0
+postcss:^8.4.31

@@ -4,35 +4,21 @@
  * Controller: WorkLogController — Registros de ponto (jornada de trabalho).
  *
  * Funcionalidades:
- *  - index(): Lista registros — gestor vê todos, funcionário vê apenas os seus.
- *             Suporta filtro por mês/período via query params (?month=2026-04)
- *  - punch(): Registra batida via AJAX (POST /punch) — retorna JSON para Alpine.js
- *  - show():  Detalhes de um registro com batidas e solicitações de ajuste
+ *  - index(): Lista registros — gestor vê todos, funcionário vê apenas os seus
+ *  - punch(): Registra batida via AJAX (POST /punch) — retorna JSON
+ *  - show():  Detalhes de um registro
  *  - edit():  Formulário de edição (apenas gestor)
- *  - update(): Atualiza horários de um registro (apenas gestor)
- *  - export(): Exporta registros como CSV (StreamedResponse)
- *  - exportPdf(): Exporta relatório mensal como PDF (DomPDF)
- *
- * O método punch() é o coração do sistema de ponto. Ele delega para o WorkLogService
- * que controla a máquina de estados (entrada → almoço → retorno → saída).
- *
- * Segurança:
- *  - Policies verificam que funcionário só vê seus próprios registros
- *  - Middleware 'role:employee' protege a rota de punch
- *  - Middleware 'role:gestor' protege edição e exportação
- *
- * Tecnologias: Laravel Controller, WorkLogService (DI), Policies, JSON Response,
- *              AJAX, StreamedResponse (CSV), DomPDF (PDF)
+ *  - update(): Atualiza horários e recalcula minutos via WorkLog::recalculateMinutes()
+ *  - export(): Exporta registros como CSV
+ *  - exportPdf(): Exporta relatório mensal como PDF
  *
  * @see \App\Services\WorkLogService
- * @see \App\Policies\WorkLogPolicy
- * @see resources/views/workslogs/index.blade.php
- * @see resources/views/workslogs/show.blade.php
- * @see resources/views/workslogs/edit.blade.php
+ * @see \App\Enums\WorkLogStatus
  */
 
 namespace App\Http\Controllers;
 
+use App\Enums\WorkLogStatus;
 use App\Models\WorkLog;
 use App\Services\WorkLogService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -49,13 +35,12 @@ class WorkLogController extends Controller
     public function index(Request $request)
     {
         $user       = $request->user();
-        $month      = $request->query('month');       // formato: 2026-04
-        $employeeId = $request->query('employee_id'); // filtro por funcionário (gestor)
+        $month      = $request->query('month');
+        $employeeId = $request->query('employee_id');
 
         if ($user->isGestor()) {
             $query = WorkLog::with('employee.user');
 
-            // Filtro por funcionário
             if ($employeeId) {
                 $query->where('employee_id', $employeeId);
             }
@@ -71,7 +56,6 @@ class WorkLogController extends Controller
 
         $logs = $query->orderByDesc('work_date')->paginate(20)->withQueryString();
 
-        // Lista de funcionários para o select de filtro (apenas para gestores)
         $employees = $user->isGestor()
             ? \App\Models\Employee::with('user')->orderBy('created_at')->get()
             : collect();
@@ -102,9 +86,6 @@ class WorkLogController extends Controller
         return view('workslogs.show', compact('workLog'));
     }
 
-    /**
-     * Formulário de edição de registro (apenas gestor).
-     */
     public function edit(WorkLog $workLog)
     {
         $this->authorize('view', $workLog);
@@ -114,9 +95,12 @@ class WorkLogController extends Controller
 
     /**
      * Atualiza horários de um registro (apenas gestor).
+     * Usa WorkLog::recalculateMinutes() para manter DRY.
      */
     public function update(Request $request, WorkLog $workLog)
     {
+        $this->authorize('view', $workLog);
+
         $validated = $request->validate([
             'clock_in'  => ['nullable', 'date'],
             'lunch_out' => ['nullable', 'date', 'after:clock_in'],
@@ -125,16 +109,8 @@ class WorkLogController extends Controller
         ]);
 
         $workLog->update($validated);
-
-        // Recalcular horas se jornada completa
-        if ($workLog->clock_in && $workLog->lunch_out && $workLog->lunch_in && $workLog->clock_out) {
-            $morning   = $workLog->lunch_out->diffInMinutes($workLog->clock_in);
-            $afternoon = $workLog->clock_out->diffInMinutes($workLog->lunch_in);
-            $workLog->update([
-                'minutes_worked' => max(0, $morning + $afternoon),
-                'status'         => 'complete',
-            ]);
-        }
+        $workLog->refresh();
+        $workLog->recalculateMinutes();
 
         return redirect()->route('worklogs.show', $workLog)
             ->with('success', 'Registro atualizado com sucesso.');
@@ -148,7 +124,7 @@ class WorkLogController extends Controller
         $month = $request->query('month');
 
         $query = WorkLog::with('employee.user')
-            ->where('status', 'complete')
+            ->where('status', WorkLogStatus::Complete)
             ->orderBy('work_date');
 
         if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
@@ -207,7 +183,7 @@ class WorkLogController extends Controller
         $logs = WorkLog::with('employee.user')
             ->whereYear('work_date', $year)
             ->whereMonth('work_date', $m)
-            ->where('status', 'complete')
+            ->where('status', WorkLogStatus::Complete)
             ->get()
             ->sortBy([
                 ['employee.user.name', 'asc'],

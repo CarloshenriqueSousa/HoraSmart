@@ -5,8 +5,10 @@ namespace Database\Factories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class EmployeerFactory extends Factory
+class EmployeeFactory extends Factory
 {
+    protected $model = \App\Models\Employee::class;
+
     public function definition(): array
     {
         return [

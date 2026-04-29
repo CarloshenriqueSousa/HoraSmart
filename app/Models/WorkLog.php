@@ -9,49 +9,35 @@
  *   clock_in → lunch_out → lunch_in → clock_out
  *   (Entrada)  (Almoço)    (Retorno)  (Saída)
  *
- * O campo 'status' controla a máquina de estados:
- *   in_progress → on_lunch → back_from_lunch → complete
+ * O campo 'status' controla a máquina de estados via WorkLogStatus enum:
+ *   InProgress → OnLunch → BackFromLunch → Complete
  *
  * Ao completar a jornada, 'minutes_worked' é calculado automaticamente:
  *   minutes_worked = (lunch_out - clock_in) + (clock_out - lunch_in)
  *
  * Armazena em minutos (inteiro) em vez de decimal para evitar imprecisão float.
  *
- * Cálculos adicionais:
- *  - Horas extras: minutos acima de DAILY_WORKLOAD (480 min = 8h)
- *  - Período manhã: lunch_out - clock_in
- *  - Período tarde: clock_out - lunch_in
+ * Usa SoftDeletes para manter histórico auditável — dados de ponto são documentos legais.
  *
  * Relacionamentos:
  *  - belongsTo Employee        → Funcionário dono do registro
  *  - hasMany   ClockAdjustment → Solicitações de ajuste de horário
  *
- * Accessors:
- *  - formatted_hours    → Converte minutes_worked para "HH:MM"
- *  - next_action        → Indica qual campo deve ser preenchido a seguir
- *  - overtime_minutes   → Minutos acima de 8h (0 se não completou)
- *  - formatted_overtime → Formato "+HH:MM" ou "—"
- *  - morning_minutes    → Minutos trabalhados no período da manhã
- *  - afternoon_minutes  → Minutos trabalhados no período da tarde
- *
- * Tecnologias: Laravel Eloquent, Carbon (casts datetime), Accessor pattern
- *
- * @see \App\Services\WorkLogService (lógica de punch)
+ * @see \App\Enums\WorkLogStatus
+ * @see \App\Services\WorkLogService
  * @see \App\Http\Controllers\WorkLogController
- * @see \App\Models\ClockAdjustment
  */
 
 namespace App\Models;
 
+use App\Enums\WorkLogStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkLog extends Model
 {
-    use HasFactory;
-
-    /** Carga horária diária padrão em minutos (8h) */
-    const DAILY_WORKLOAD = 480;
+    use HasFactory, SoftDeletes;
 
     /** Carga horária mensal padrão em minutos (22 dias úteis × 8h) */
     const MONTHLY_WORKLOAD = 10560;
@@ -75,6 +61,7 @@ class WorkLog extends Model
             'lunch_out' => 'datetime',
             'lunch_in'  => 'datetime',
             'clock_out' => 'datetime',
+            'status'    => WorkLogStatus::class,
         ];
     }
 
@@ -87,6 +74,39 @@ class WorkLog extends Model
     {
         return $this->hasMany(ClockAdjustment::class);
     }
+
+    // ─── Cálculo centralizado (DRY) ─────────────────────────────
+
+    /**
+     * Calcula os minutos trabalhados com base nas 4 batidas.
+     * Método estático para que possa ser chamado de qualquer lugar.
+     */
+    public static function calculateWorkedMinutes(self $log): int
+    {
+        if (!$log->clock_in || !$log->lunch_out || !$log->lunch_in || !$log->clock_out) {
+            return 0;
+        }
+
+        $morning   = abs($log->lunch_out->diffInMinutes($log->clock_in, false));
+        $afternoon = abs($log->clock_out->diffInMinutes($log->lunch_in, false));
+
+        return max(0, (int) ($morning + $afternoon));
+    }
+
+    /**
+     * Recalcula e persiste os minutos trabalhados. Usado quando batidas são editadas.
+     */
+    public function recalculateMinutes(): void
+    {
+        if ($this->clock_in && $this->lunch_out && $this->lunch_in && $this->clock_out) {
+            $this->update([
+                'minutes_worked' => self::calculateWorkedMinutes($this),
+                'status'         => WorkLogStatus::Complete,
+            ]);
+        }
+    }
+
+    // ─── Accessors ──────────────────────────────────────────────
 
     /**
      * Horas trabalhadas formatadas como "HH:MM".
@@ -105,28 +125,24 @@ class WorkLog extends Model
 
     /**
      * Próxima ação na sequência de batidas (qual campo preencher).
-     *
-     * Caso especial: log recém-criado tem status 'in_progress' mas clock_in ainda é null,
-     * pois o firstOrCreate não popula clock_in automaticamente. Nesse caso a primeira
-     * ação é registrar o clock_in.
      */
     public function getNextActionAttribute(): ?string
     {
         // Primeira batida do dia: log criado mas clock_in ainda não foi registrado
-        if ($this->status === 'in_progress' && is_null($this->clock_in)) {
+        if ($this->status === WorkLogStatus::InProgress && is_null($this->clock_in)) {
             return 'clock_in';
         }
 
         return match ($this->status) {
-            'in_progress'     => 'lunch_out',
-            'on_lunch'        => 'lunch_in',
-            'back_from_lunch' => 'clock_out',
-            default           => null,
+            WorkLogStatus::InProgress    => 'lunch_out',
+            WorkLogStatus::OnLunch       => 'lunch_in',
+            WorkLogStatus::BackFromLunch => 'clock_out',
+            default                      => null,
         };
     }
 
     /**
-     * Minutos de hora extra (acima de 8h). Retorna 0 se jornada não completa.
+     * Minutos de hora extra (acima da carga horária). Retorna 0 se jornada não completa.
      */
     public function getOvertimeMinutesAttribute(): int
     {
@@ -134,9 +150,9 @@ class WorkLog extends Model
             return 0;
         }
 
-        $workload = $this->employee->daily_workload ?? self::DAILY_WORKLOAD;
+        $workload  = $this->employee->daily_workload ?? 480;
         $tolerance = $this->employee->overtime_tolerance ?? 10;
-        
+
         $diff = $this->minutes_worked - $workload;
 
         return ($diff > $tolerance) ? $diff : 0;
@@ -197,6 +213,6 @@ class WorkLog extends Model
 
     public function isComplete(): bool
     {
-        return $this->status === 'complete';
+        return $this->status === WorkLogStatus::Complete;
     }
 }

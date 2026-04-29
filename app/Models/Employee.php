@@ -5,14 +5,14 @@
  *
  * Separado do User por design: User cuida apenas de autenticação (email/senha/role),
  * enquanto Employee armazena dados de RH (CPF, endereço, cargo, data de admissão).
- * Isso permite que o sistema de autenticação permaneça limpo e desacoplado.
+ *
+ * Usa SoftDeletes para manter histórico auditável — dados de ponto são documentos
+ * legais (CLT) e não devem ser removidos permanentemente.
  *
  * Relacionamentos:
  *  - belongsTo User     → Cada funcionário tem exatamente um usuário
  *  - hasMany  WorkLog   → Registros de ponto do funcionário
  *  - hasOne   todayLog  → Atalho para o registro de ponto do dia atual
- *
- * Tecnologias: Laravel Eloquent, Carbon (cast de 'hired_at' para date)
  *
  * @see \App\Models\User
  * @see \App\Models\WorkLog
@@ -23,10 +23,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -43,8 +44,8 @@ class Employee extends Model
     protected function casts(): array
     {
         return [
-            'hired_at' => 'date',
-            'daily_workload' => 'integer',
+            'hired_at'           => 'date',
+            'daily_workload'     => 'integer',
             'overtime_tolerance' => 'integer',
         ];
     }

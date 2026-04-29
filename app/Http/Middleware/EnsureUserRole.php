@@ -3,18 +3,12 @@
 /**
  * Middleware: EnsureUserRole — Controle de acesso por perfil de usuário.
  *
- * Verifica se o usuário autenticado possui um dos roles esperados.
- * Usado nas rotas via: ->middleware('role:gestor') ou ->middleware('role:employee')
+ * Aceita tanto os valores string ('gestor', 'employee') quanto os Enums,
+ * pois o middleware recebe os parâmetros como string da rota.
  *
- * Aceita múltiplos roles: ->middleware('role:gestor,employee')
- * Se o usuário não tiver o role correto, retorna HTTP 403.
+ * Uso: ->middleware('role:gestor') ou ->middleware('role:gestor,employee')
  *
- * Registrado como alias 'role' no bootstrap/app.php.
- *
- * Tecnologias: Laravel Middleware, Variadic parameters
- *
- * @see \App\Models\User::$role
- * @see bootstrap/app.php (registro do alias)
+ * @see \App\Enums\UserRole
  */
 
 namespace App\Http\Middleware;
@@ -27,7 +21,7 @@ class EnsureUserRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+        if (!$request->user() || !in_array($request->user()->role->value, $roles)) {
             abort(403, 'Acesso não autorizado.');
         }
 

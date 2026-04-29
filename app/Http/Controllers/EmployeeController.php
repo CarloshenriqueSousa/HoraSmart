@@ -157,10 +157,13 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         $this->authorize('delete', $employee);
+
+        // Soft delete: mantém dados históricos para compliance CLT
+        $employee->delete();
         $employee->user->delete();
 
         return redirect()->route('employees.index')
-            ->with('success', 'Funcionário removido com sucesso.');
+            ->with('success', 'Funcionário desativado com sucesso.');
     }
 
     /**

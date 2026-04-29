@@ -1,0 +1,44 @@
+# ── Controle de versão ───────────────────
+.git
+.gitignore
+.gitattributes
+
+# ── Ambiente local ───────────────────────
+.env
+.env.backup
+.env.production
+
+# ── Dependências (reinstaladas no build) ─
+node_modules
+vendor
+
+# ── Banco local ──────────────────────────
+database/database.sqlite
+
+# ── Logs e cache ─────────────────────────
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# ── Testes (não vão pra produção) ────────
+tests
+phpunit.xml
+.phpunit.cache
+.phpunit.result.cache
+
+# ── IDE e OS ─────────────────────────────
+.idea
+.vscode
+.fleet
+.zed
+.nova
+.DS_Store
+Thumbs.db
+
+# ── Docs ─────────────────────────────────
+README.md
+README_PRODUTO.md
+README_TECNICO.md
+COMMITS.md
+LICENSE

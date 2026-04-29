@@ -5,18 +5,10 @@
  *
  * Cria um ambiente completo para avaliação:
  *  - 1 usuário gestor (gestor@smart.com / password)
- *  - 5 funcionários com dados realistas (nome, CPF válido, cargo, endereço em Fortaleza)
- *  - 30 dias de histórico de ponto para cada funcionário (apenas dias úteis)
+ *  - 5 funcionários com dados realistas
+ *  - 30 dias de histórico de ponto (apenas dias úteis)
  *
- * Cada dia útil recebe 4 batidas com horários randomizados:
- *  - Entrada: entre 07:00 e 09:59
- *  - Almoço: ~4h depois da entrada, duração de 45-75 min
- *  - Saída: ~4h depois do retorno do almoço
- *
- * O CPF é gerado com dígitos verificadores válidos (algoritmo real do CPF).
- * Usa firstOrCreate para idempotência — pode rodar múltiplas vezes sem erro.
- *
- * Tecnologias: Laravel Seeder, Eloquent, Carbon, firstOrCreate
+ * Protegido por environment guard — não executa em produção.
  *
  * @see \App\Models\User
  * @see \App\Models\Employee
@@ -25,6 +17,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
+use App\Enums\WorkLogStatus;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\WorkLog;
@@ -35,13 +29,19 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Guard: não executar em produção
+        if (app()->environment('production')) {
+            $this->command->warn('⚠ Seeder bloqueado em produção. Use --force se necessário.');
+            return;
+        }
+
         // Gestor padrão
         $gestor = User::firstOrCreate(
             ['email' => 'gestor@smart.com'],
             [
                 'name'     => 'Admin Smart',
                 'password' => Hash::make('password'),
-                'role'     => 'gestor',
+                'role'     => UserRole::Gestor,
             ]
         );
 
@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
                 [
                     'name'     => $data['name'],
                     'password' => Hash::make('password'),
-                    'role'     => 'employee',
+                    'role'     => UserRole::Employee,
                 ]
             );
 
@@ -110,7 +110,7 @@ class DatabaseSeeder extends Seeder
                         'lunch_in'       => $lunchIn,
                         'clock_out'      => $clockOut,
                         'minutes_worked' => (int) $worked,
-                        'status'         => 'complete',
+                        'status'         => WorkLogStatus::Complete,
                     ]
                 );
 

@@ -3,11 +3,13 @@
 namespace Database\Factories;
 
 use App\Models\Employee;
-use App\Models\Employeer;
+use App\Models\WorkLog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class WorksLogFactory extends Factory
+class WorkLogFactory extends Factory
 {
+    protected $model = WorkLog::class;
+
     public function definition(): array
     {
         $clockIn   = $this->faker->dateTimeBetween('07:45:00', '09:00:00');
@@ -21,7 +23,7 @@ class WorksLogFactory extends Factory
         ) / 60;
 
         return [
-            'employee_id'    => Employeer::factory(),
+            'employee_id'    => Employee::factory(),
             'work_date'      => $this->faker->dateTimeBetween('-30 days', 'now'),
             'clock_in'       => $clockIn,
             'lunch_out'      => $lunchOut,

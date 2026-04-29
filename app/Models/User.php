@@ -3,22 +3,21 @@
 /**
  * Model: User — Representa um usuário autenticável do sistema.
  *
- * Cada usuário possui um 'role' que define seu nível de acesso:
- *  - 'gestor'   → Gestor de RH (acesso total: CRUD de funcionários, todos os registros)
- *  - 'employee' → Funcionário (acesso restrito: apenas seus próprios dados e ponto)
+ * Cada usuário possui um 'role' (UserRole enum) que define seu nível de acesso:
+ *  - Gestor   → Gestor de RH (acesso total: CRUD de funcionários, todos os registros)
+ *  - Employee → Funcionário (acesso restrito: apenas seus próprios dados e ponto)
  *
  * Relacionamentos:
  *  - hasOne Employee → Dados cadastrais do funcionário (CPF, endereço, cargo, etc.)
  *
- * Tecnologias: Laravel Eloquent, Laravel Auth (Authenticatable), Notifiable trait
- *
+ * @see \App\Enums\UserRole
  * @see \App\Models\Employee
  * @see \App\Http\Middleware\EnsureUserRole
- * @see \Database\Seeders\DatabaseSeeder (credenciais de demo)
  */
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -44,6 +43,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
+            'role'              => UserRole::class,
         ];
     }
 
@@ -54,11 +54,11 @@ class User extends Authenticatable
 
     public function isEmployee(): bool
     {
-        return $this->role === 'employee';
+        return $this->role === UserRole::Employee;
     }
 
     public function isGestor(): bool
     {
-        return $this->role === 'gestor';
+        return $this->role === UserRole::Gestor;
     }
 }

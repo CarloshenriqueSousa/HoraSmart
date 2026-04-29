@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,38 +14,52 @@ class PunchAccessTest extends TestCase
 
     public function test_gestors_cannot_punch_the_clock()
     {
-        $gestor = User::factory()->create(['role' => 'gestor']);
+        $gestor = User::factory()->create(['role' => UserRole::Gestor]);
 
         $response = $this->actingAs($gestor)->postJson(route('punch'));
 
-        // Deve receber acesso negado (Forbidden) porque o gestor não deve bater ponto
         $response->assertStatus(403);
+    }
+
+    public function test_employee_can_punch_successfully()
+    {
+        $user = User::factory()->create(['role' => UserRole::Employee]);
+        Employee::create([
+            'user_id'  => $user->id,
+            'cpf'      => '000.000.000-00',
+            'position' => 'Tester',
+            'address'  => 'Test Address',
+            'hired_at' => now()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('punch'));
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
     }
 
     public function test_employee_has_rate_limiting_in_punch()
     {
-        $user = User::factory()->create(['role' => 'employee']);
+        $user = User::factory()->create(['role' => UserRole::Employee]);
         Employee::create([
-            'user_id' => $user->id,
-            'cpf' => '00000000000',
+            'user_id'  => $user->id,
+            'cpf'      => '000.000.000-00',
             'position' => 'Tester',
-            'address' => 'Test Address',
-            'hired_at' => now()->toDateString()
+            'address'  => 'Test Address',
+            'hired_at' => now()->toDateString(),
         ]);
 
         $route = route('punch');
 
-        // Bate ponto normal
+        // Normal punch
         $response1 = $this->actingAs($user)->postJson($route);
         $response1->assertStatus(200);
 
-        // Dispara excessivamente para ativar o throttle
+        // Fire excessively to trigger throttle
         for ($i = 0; $i < 6; $i++) {
             $response = $this->actingAs($user)->postJson($route);
         }
 
-        // Após passar de 5 requests (throttle global de 5,1 no grupo punch), 
-        // a próxima deve retornar status 429 Too Many Requests
+        // After 5+ requests, should return 429 Too Many Requests
         $response->assertStatus(429);
     }
 }
